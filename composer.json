@@ -1,0 +1,19 @@
+{
+    "name": "smindel/saml",
+    "description": "PHP SAML 2.0 Adapter",
+    "type": "library",
+    "require": {
+        "ext-dom": "*",
+        "ext-openssl": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~5.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Smindel\\SAML\\": "src/"
+        }
+    },
+    "license": "MIT",
+    "minimum-stability": "dev"
+}
