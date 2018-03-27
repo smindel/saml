@@ -25,7 +25,6 @@ class AuthNRequest extends Element
 
     public function deflate()
     {
-        file_put_contents('../AuthnRequest.xml', $this->ownerDocument->saveXML());
         return base64_encode(preg_replace('/(\s{2,})/', ' ', $this->ownerDocument->saveXML()));
     }
 }

@@ -12,7 +12,7 @@ As a first step the library is aiming at, but not yet complying to OASIS SAML 2.
 - Artifact Resolution, SOAP
 - Enhanced Client/Proxy SSO, PAOS
 - Single Logout (IdP-initiated) – HTTP redirect
-- Single Logout (SP-initiated) – HTTP redirect
+- Single Logout (SP-initiated) – HTTP redirect: check
 
 ## Security Features
 
