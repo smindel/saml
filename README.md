@@ -56,6 +56,7 @@ This goes in a controller action:
 - https://en.wikipedia.org/wiki/SAML_2.0
 - https://github.com/jch/saml
 - https://www.owasp.org/index.php/SAML_Security_Cheat_Sheet
+- http://xacmlinfo.org/2013/06/28/how-saml2-single-logout-works/
 - https://stackoverflow.com/questions/19538561/verify-digital-signature-in-saml-response-against-certificate-in-php
 - https://github.com/robrichards/xmlseclibs/blob/master/tests/xmlsec-verify.phpt
 
@@ -67,14 +68,9 @@ This goes in a controller action:
 ## todos
 
 - Validation
-    * replace all getElementsByTagName
     * verify certificate
-    * validate response signature if present
-    * validate assertion signature
     * SSL
-    * NotBefore/NotOnOrAfter
     * For how long do we store request ids to prevent replay???
-- Default request issuer
 - Logout response
 - Tests
 - MetadataProvider

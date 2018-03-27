@@ -4,7 +4,8 @@
     "type": "library",
     "require": {
         "ext-dom": "*",
-        "ext-openssl": "*"
+        "ext-openssl": "*",
+        "robrichards/xmlseclibs": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "~5.7"
