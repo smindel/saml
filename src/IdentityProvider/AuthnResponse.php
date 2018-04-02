@@ -41,7 +41,7 @@ class AuthnResponse extends Element
         return implode(', ', $this->validationErrors);
     }
 
-    public function validate($requestID = null, $issuer = null)
+    public function validate($requestID = null, $issuer = null, $audience = null)
     {
         $xpath = new \DOMXPath($this->ownerDocument);
 
@@ -57,7 +57,7 @@ class AuthnResponse extends Element
 
         if (!$this->validateAssertion()) return !($this->validationErrors[] = 'invalid assertion');
 
-        if (!$this->validateConditions()) return !($this->validationErrors[] = 'invalid conditions');
+        if (!$this->validateConditions($audience)) return !($this->validationErrors[] = 'invalid conditions');
 
         return true;
     }
