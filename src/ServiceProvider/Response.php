@@ -1,13 +1,11 @@
 <?php
 
-namespace Smindel\SAML\IdentityProvider;
+namespace Smindel\SAML\ServiceProvider;
 
 use Smindel\SAML\Element;
 
-class LogoutResponse extends Element
+class Response extends Element
 {
-    protected $validationErrors = [];
-
     public function getIssuer($context = null)
     {
         $context = $context ?: $this->get('/samlp:Response')->item(0);
@@ -15,42 +13,11 @@ class LogoutResponse extends Element
         if ($node) return $node->nodeValue;
     }
 
+    protected $validationErrors = [];
+
     public function getValidationError()
     {
         return implode(', ', $this->validationErrors);
-    }
-
-    public function validate($requestID = null, $issuer = null)
-    {
-        $xpath = new \DOMXPath($this->ownerDocument);
-
-        if (!$this->validateSchema()) return !($this->validationErrors[] = 'invalid schema');
-
-        if (!$this->validateSignature()) return !($this->validationErrors[] = 'invalid response signature');
-
-        if ($requestID && $this['InResponseTo'] != $requestID) return !($this->validationErrors[] = 'invalid request id');
-
-        if (!$this->validateStatus()) return !($this->validationErrors[] = 'invalid status');
-
-        if (!$this->validateIssuer($issuer)) return !($this->validationErrors[] = 'invalid issuer');
-
-        return true;
-    }
-
-    public function validateSchema()
-    {
-        return (bool)$this->ownerDocument->schemaValidate(dirname(dirname(dirname(__FILE__))) . '/schema/saml-schema-protocol-2.0.xsd');
-    }
-
-    public function validateStatus()
-    {
-        return $this->get('/samlp:Response/samlp:Status/samlp:StatusCode[@Value=\'urn:oasis:names:tc:SAML:2.0:status:Success\']')->length == 1;
-    }
-
-    public function validateIssuer($issuer = null)
-    {
-        $issuer = $issuer ?: $this->defaultSpId;
-        return $this->getIssuer() == $issuer;
     }
 
     public function validateSignature($context = null)
@@ -78,4 +45,21 @@ class LogoutResponse extends Element
 
         return openssl_verify($data, $value, $certificate, $algorithm) == 1;
     }
+
+    public function validateSchema()
+    {
+        return (bool)$this->ownerDocument->schemaValidate(dirname(dirname(dirname(__FILE__))) . '/schema/saml-schema-protocol-2.0.xsd');
+    }
+
+    public function validateStatus()
+    {
+        return $this->get('/samlp:Response/samlp:Status/samlp:StatusCode[@Value=\'urn:oasis:names:tc:SAML:2.0:status:Success\']')->length == 1;
+    }
+
+    public function validateIssuer($issuer = null)
+    {
+        $issuer = $issuer ?: $this->defaultSpId;
+        return $this->getIssuer() == $issuer;
+    }
+
 }

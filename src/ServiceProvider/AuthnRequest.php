@@ -2,9 +2,7 @@
 
 namespace Smindel\SAML\ServiceProvider;
 
-use Smindel\SAML\Element;
-
-class AuthNRequest extends Element
+class AuthnRequest extends Request
 {
     public static function create($destination, $acs = null, $id = null, $spId = null)
     {
@@ -21,10 +19,5 @@ class AuthNRequest extends Element
         $inst->appendChild($inst->ownerDocument->createElementNS('urn:oasis:names:tc:SAML:2.0:assertion', 'saml:Issuer', $spId));
 
         return $inst;
-    }
-
-    public function deflate()
-    {
-        return base64_encode(preg_replace('/(\s{2,})/', ' ', $this->ownerDocument->saveXML()));
     }
 }

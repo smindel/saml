@@ -40,6 +40,11 @@ class Element extends DOMElement implements ArrayAccess
         return $element;
     }
 
+    public function toXML()
+    {
+        return $this->ownerDocument->saveXML();
+    }
+
     public function get($xpath, $node = null, $registerNs = true)
     {
         return $this->xpath->query($xpath, $node, $registerNs);
