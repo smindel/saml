@@ -33,7 +33,7 @@ class AuthnResponse extends Response
 
         if (!$this->validateSignature()) return !($this->validationErrors[] = 'invalid response signature');
 
-        if ($requestID && $this['InResponseTo'] != $requestID) return !($this->validationErrors[] = 'invalid request id');
+        if ($requestID && $this['@InResponseTo'] != $requestID) return !($this->validationErrors[] = 'invalid request id');
 
         if (!$this->validateStatus()) return !($this->validationErrors[] = 'invalid status');
 

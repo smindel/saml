@@ -9,6 +9,12 @@ class Element extends DOMElement implements ArrayAccess
     protected $xpath;
     protected $defaultSpId;
     protected $currentUrl;
+    protected static $regex = '/
+        @++
+        (?=(?:(?:[^"]*+"){2})*+[^"]*+$)
+        (?=(?:(?:[^\']*+\'){2})*+[^\']*+$)
+        (?=(?:[^\[\]]*+\[[^\[\]]*+\])*+[^\[\]]*+$)
+    /x';
 
     public function __construct($name, $value = '', $namespaceURI = '')
     {
@@ -23,7 +29,10 @@ class Element extends DOMElement implements ArrayAccess
         $this->defaultSpId = sprintf('%s://%s/', self::is_ssl() ? 'https' : 'http', $_SERVER['HTTP_HOST']);
         $this->currentUrl = $this->defaultSpId . ltrim($_SERVER['REQUEST_URI'], '/');
 
+        list($prefix) = explode(':', $this->tagName);
+
         $this->xpath = new \DOMXPath($this->ownerDocument);
+        $this->xpath->registerNamespace($prefix, $this->lookupNamespaceUri($prefix));
         $this->xpath->registerNamespace('samlp', 'urn:oasis:names:tc:SAML:2.0:protocol');
         $this->xpath->registerNamespace('saml', 'urn:oasis:names:tc:SAML:2.0:assertion');
         $this->xpath->registerNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
@@ -52,22 +61,56 @@ class Element extends DOMElement implements ArrayAccess
 
     public function offsetExists($offset)
     {
+        $list = $this->get($offset);
+        var_dump($list);
         return $this->hasAttribute($offset);
     }
 
     public function offsetGet($offset)
     {
-        return $this->getAttribute($offset);
+        $list = $this->get($offset);
+        $node = $list->item(0);
+        return ($node instanceof \DOMAttr) ? $node->value : $node;
     }
 
     public function offsetSet($offset, $value)
     {
-        $this->setAttribute($offset, $value);
-        if (strtolower($offset) == 'id') $this->setIDAttribute($offset, true);
+        list($xpath, $attribute) = preg_split(static::$regex, $offset . '@');
+        if ($attribute && !is_array($value)) {
+            $parents = $xpath ? $this->get($xpath) : [$this];
+            foreach ($parents as $element) $element->setAttribute($attribute, $value);
+        } else {
+            $segments = explode('/', $xpath);
+            $name = array_pop($segments);
+            $xpath = implode('/', $segments);
+            $parents = $xpath ? $this->get($xpath) : [$this];
+            if (!is_array($value)) $value = ['value' => $value];
+            if (empty($value['ns'])) $value['ns'] = $this->lookupNamespaceUri(explode(':', $name)[0]);
+            // var_dump($value);
+            foreach ($value as $key => $val) {
+                if ($key[0] == '@') {
+                    $value['attributes'][substr($key,1)]  = $val;
+                    unset($value[$key]);
+                }
+            }
+            // var_dump($xpath, $parents, $name, $value);
+            foreach ($parents as $parent) {
+                $element = isset($value['ns'])
+                    ? $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null)
+                    : $this->ownerDocument->createElement($name, $value['value'] ?? null);
+                foreach ($value['attributes'] ?? [] as $key => $val) {
+                    $element->setAttribute($key, $val);
+                }
+                $parent->appendChild($element);
+            }
+        }
     }
 
     public function offsetUnset($offset)
     {
+        list($node,$attr) = preg_split(static::$regex, $offset);
+        $list = $this->get($node);
+        var_dump($node, $attr, $list);
         $this->removeAttribute($offset);
     }
 
