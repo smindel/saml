@@ -6,8 +6,7 @@ class AuthnResponse extends Response
 {
     public function getSubjectId()
     {
-        $node = $this->get('/samlp:Response/saml:Assertion/saml:Subject/saml:NameID')->item(0);
-        if ($node) return $node->nodeValue;
+        return $this['saml:Assertion/saml:Subject/saml:NameID/text()'];
     }
 
     public function getSubject()
@@ -21,8 +20,7 @@ class AuthnResponse extends Response
 
     public function getSessionIndex()
     {
-        $stmt = $this->get('/samlp:Response/saml:Assertion/saml:AuthnStatement[@SessionIndex]')->item(0);
-        return $stmt ? $stmt->getAttribute('SessionIndex') : null;
+        return $this['saml:Assertion/saml:AuthnStatement[@SessionIndex]/@SessionIndex'];
     }
 
     public function validate($requestID = null, $issuer = null, $audience = null)
@@ -48,8 +46,6 @@ class AuthnResponse extends Response
 
     public function validateAssertion()
     {
-        $assertion = $this->get('/samlp:Response/saml:Assertion')->item(0);
-
         if ($this->getIssuer() != $this->getIssuer('saml:Assertion/')) return !($this->validationErrors[] = 'invalid assertion issuer');
 
         if (!$this->validateSubject()) return !($this->validationErrors[] = 'invalid assertion subject');
@@ -61,12 +57,16 @@ class AuthnResponse extends Response
 
     public function validateSubject($recipient = null)
     {
-        $recipient = $recipient ?: $this->currentUrl;
-        $node = $this->get('/samlp:Response/saml:Assertion/saml:Subject/saml:SubjectConfirmation[@Method=\'urn:oasis:names:tc:SAML:2.0:cm:bearer\']')->item(0);
+        $confPath = 'saml:Assertion/saml:Subject/saml:SubjectConfirmation[@Method=\'urn:oasis:names:tc:SAML:2.0:cm:bearer\']';
+        $node = $this[$confPath];
         if (!$node) return !($this->validationErrors[] = 'missing or invalid assertion subject confirmation');
-        $data = $this->get('saml:SubjectConfirmationData[@NotOnOrAfter][@Recipient]', $node)->item(0);
+
+        $data = $this[$confPath . '/saml:SubjectConfirmationData[@NotOnOrAfter][@Recipient]'];
         if (!$data) return !($this->validationErrors[] = 'missing or invalid assertion subject confirmation data');
+
         if (strtotime($data->getAttribute('NotOnOrAfter')) <= time()) return !($this->validationErrors[] = 'assertion expired');
+
+        $recipient = $recipient ?: $this->currentUrl;
         if ($data->getAttribute('Recipient') != $recipient) return !($this->validationErrors[] = 'invalid assertion subject confirmation data recipient');
 
         return true;
@@ -74,11 +74,12 @@ class AuthnResponse extends Response
 
     public function validateConditions($audience = null)
     {
-        $audience = $audience ?: $this->defaultSpId;
-        $conditions = $this->get('/samlp:Response/saml:Assertion/saml:Conditions')->item(0);
+        $conditions = $this['saml:Assertion/saml:Conditions'];
         if (!$conditions) return true;
         if (($notbefore = $conditions->getAttribute('NotBefore')) && strtotime($notbefore) > time()) return !($this->validationErrors[] = 'assertion not yet active');
         if (($notonorafter = $conditions->getAttribute('NotOnOrAfter')) && strtotime($notonorafter) <= time()) return !($this->validationErrors[] = 'assertion expired');
+
+        $audience = $audience ?: $this->defaultSpId;
         $audiences = $this->get('saml:AudienceRestriction/saml:Audience', $conditions);
         $audienceConfirmed = $audiences->length ? false : null;
 

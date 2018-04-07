@@ -21,7 +21,7 @@ class LogoutRequest extends Request
             'value' => $subjectID,
             '@Format' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
         ];
-        if ($metadataProvider) $inst['saml:NameID@SPNameQualifier'] = $metadataProvider;
+        if ($metadataProvider) $inst['saml:NameID/@SPNameQualifier'] = $metadataProvider;
 
         $inst['samlp:SessionIndex'] = $session;
 
