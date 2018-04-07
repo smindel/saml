@@ -8,9 +8,7 @@ class Response extends Element
 {
     public function getIssuer($context = null)
     {
-        $context = $context ?: $this->get('/samlp:Response')->item(0);
-        $node = $this->get('saml:Issuer', $context)->item(0);
-        if ($node) return $node->nodeValue;
+        return $this[$context . 'saml:Issuer/text()'];
     }
 
     protected $validationErrors = [];
@@ -22,23 +20,21 @@ class Response extends Element
 
     public function validateSignature($context = null)
     {
-        $context = $context ?: $this->get('/samlp:Response')->item(0);
-        $signature = $this->get('ds:Signature', $context)->item(0);
-        if (!$signature) return !($this->validationErrors[] = 'missing signature');
+        if (!$this[$context . 'ds:Signature']) return !($this->validationErrors[] = 'missing signature');
 
-        $data = $this->get('ds:SignedInfo', $signature)->item(0);
+        $data = $this[$context . 'ds:Signature/ds:SignedInfo'];
         if (!$data) return !($this->validationErrors[] = 'missing signed info');
         $data = $data->C14N(true, false);
 
-        $value = $this->get('ds:SignatureValue', $signature)->item(0);
+        $value = $this[$context . 'ds:Signature/ds:SignatureValue'];
         if (!$value) return !($this->validationErrors[] = 'missing signature value');
         $value = base64_decode($value->nodeValue);
 
-        $certificate = $this->get('ds:KeyInfo/ds:X509Data/ds:X509Certificate', $signature)->item(0);
+        $certificate = $this[$context . 'ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate'];
         if (!$certificate) return !($this->validationErrors[] = 'missing x509 certificate');
         $certificate = "-----BEGIN CERTIFICATE-----\n" . $certificate->nodeValue . "\n" . "-----END CERTIFICATE-----";
 
-        $algorithm = $this->get('ds:SignedInfo/ds:SignatureMethod[@Algorithm]', $signature)->item(0);
+        $algorithm = $this[$context . 'ds:Signature/ds:SignedInfo/ds:SignatureMethod[@Algorithm]'];
         if (!$algorithm) return !($this->validationErrors[] = 'missing or invalid signature method');
         list(,$algorithm) = explode('#', $algorithm->getAttribute('Algorithm'));
         $algorithm = strtoupper($algorithm);
@@ -53,7 +49,7 @@ class Response extends Element
 
     public function validateStatus()
     {
-        return $this->get('/samlp:Response/samlp:Status/samlp:StatusCode[@Value=\'urn:oasis:names:tc:SAML:2.0:status:Success\']')->length == 1;
+        return (bool)$this['samlp:Status/samlp:StatusCode[@Value=\'urn:oasis:names:tc:SAML:2.0:status:Success\']'];
     }
 
     public function validateIssuer($issuer = null)

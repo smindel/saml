@@ -40,8 +40,7 @@ class Request extends Element
         $objDSig->add509Cert(file_get_contents($certificate));
 
         // Append the signature to the XML
-        $objDSig->insertSignature($this, $this->get('/samlp:LogoutRequest/saml:NameID')->item(0));
-        // $objDSig->appendSignature($this);
+        $objDSig->insertSignature($this, $this['saml:NameID']);
 
         return $this;
     }

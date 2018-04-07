@@ -50,11 +50,11 @@ class AuthnResponse extends Response
     {
         $assertion = $this->get('/samlp:Response/saml:Assertion')->item(0);
 
-        if ($this->getIssuer() != $this->getIssuer($assertion)) return !($this->validationErrors[] = 'invalid assertion issuer');
+        if ($this->getIssuer() != $this->getIssuer('saml:Assertion/')) return !($this->validationErrors[] = 'invalid assertion issuer');
 
         if (!$this->validateSubject()) return !($this->validationErrors[] = 'invalid assertion subject');
 
-        if (!$this->validateSignature($assertion)) return !($this->validationErrors[] = 'invalid assertion signature');
+        if (!$this->validateSignature('saml:Assertion/')) return !($this->validationErrors[] = 'invalid assertion signature');
 
         return true;
     }

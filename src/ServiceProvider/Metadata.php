@@ -20,6 +20,39 @@ class Metadata extends Element
             '@protocolSupportEnumeration' => 'urn:oasis:names:tc:SAML:2.0:protocol',
         ];
 
+        $inst['md:SPSSODescriptor/md:KeyDescriptor'] = [
+            '@use' => 'signing',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor/ds:KeyInfo'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor/ds:KeyInfo/ds:X509Data'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor/ds:KeyInfo/ds:X509Data/ds:X509Certificate'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+            'value' => 'put-CERT-here',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor'] = [
+            '@use' => 'encryption',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor[2]/ds:KeyInfo'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor[2]/ds:KeyInfo/ds:X509Data'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+        ];
+
+        $inst['md:SPSSODescriptor/md:KeyDescriptor[2]/ds:KeyInfo/ds:X509Data/ds:X509Certificate'] = [
+            'ns' => 'http://www.w3.org/2000/09/xmldsig#',
+            'value' => 'put-CERT-here',
+        ];
 
         $inst['md:SPSSODescriptor/md:SingleLogoutService'] = [
             '@Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',

@@ -61,16 +61,15 @@ class Element extends DOMElement implements ArrayAccess
 
     public function offsetExists($offset)
     {
-        $list = $this->get($offset);
-        var_dump($list);
-        return $this->hasAttribute($offset);
+        return (bool)$this->get($offset)->length;
     }
 
     public function offsetGet($offset)
     {
-        $list = $this->get($offset);
-        $node = $list->item(0);
-        return ($node instanceof \DOMAttr) ? $node->value : $node;
+        $node = $this->get($offset)->item(0);
+        if ($node instanceof \DOMAttr) return $node->value;
+        if ($node instanceof \DOMText) return $node->textContent;
+        return $node;
     }
 
     public function offsetSet($offset, $value)
@@ -86,14 +85,12 @@ class Element extends DOMElement implements ArrayAccess
             $parents = $xpath ? $this->get($xpath) : [$this];
             if (!is_array($value)) $value = ['value' => $value];
             if (empty($value['ns'])) $value['ns'] = $this->lookupNamespaceUri(explode(':', $name)[0]);
-            // var_dump($value);
             foreach ($value as $key => $val) {
                 if ($key[0] == '@') {
                     $value['attributes'][substr($key,1)]  = $val;
                     unset($value[$key]);
                 }
             }
-            // var_dump($xpath, $parents, $name, $value);
             foreach ($parents as $parent) {
                 $element = isset($value['ns'])
                     ? $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null)
@@ -108,10 +105,9 @@ class Element extends DOMElement implements ArrayAccess
 
     public function offsetUnset($offset)
     {
-        list($node,$attr) = preg_split(static::$regex, $offset);
-        $list = $this->get($node);
-        var_dump($node, $attr, $list);
-        $this->removeAttribute($offset);
+        foreach ($this->get($offset) as $node) {
+            $node->parentNode->removeChild($node);
+        }
     }
 
     protected static function is_ssl()
