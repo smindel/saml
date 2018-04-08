@@ -8,6 +8,8 @@ use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 class Request extends Element
 {
+    protected static $schema_file = 'saml-schema-protocol-2.0.xsd';
+
     public function sign($privateKey, $certificate)
     {
         // Create a new Security object

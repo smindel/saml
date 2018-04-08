@@ -16,8 +16,10 @@ class Element extends DOMElement implements ArrayAccess
         (?=(?:[^\[\]]*+\[[^\[\]]*+\])*+[^\[\]]*+$)
     /x';
 
-    public function __construct($name, $value = '', $namespaceURI = '')
+    public function __construct($name = null, $value = '', $namespaceURI = '')
     {
+        $name = $name ?: static::$tag_name;
+        $namespaceURI = $namespaceURI ?: static::$ns_uri;
         parent::__construct($name, $value, $namespaceURI);
         $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->appendChild($this);
@@ -54,6 +56,12 @@ class Element extends DOMElement implements ArrayAccess
         return $this->ownerDocument->saveXML();
     }
 
+    public function validateSchema()
+    {
+        $filename = dirname(dirname(__FILE__)) . '/schema/' . static::$schema_file;
+        return (bool)$this->ownerDocument->schemaValidate($filename);
+    }
+
     public function get($xpath, $node = null, $registerNs = true)
     {
         return $this->xpath->query($xpath, $node, $registerNs);
@@ -76,9 +84,20 @@ class Element extends DOMElement implements ArrayAccess
     {
         list($xpath, $attribute) = preg_split(static::$regex, $offset . '@');
         if ($attribute && !is_array($value)) {
+            // set attribute
             $parents = $xpath ? $this->get($xpath) : [$this];
-            foreach ($parents as $element) $element->setAttribute($attribute, $value);
+            foreach ($parents as $element) {
+                $this->setElementattribute($element, $attribute, $value);
+            }
+        } else if ($value instanceof \DOMNode) {
+            $segments = explode('/', $xpath);
+            $name = array_pop($segments);
+            $xpath = implode('/', $segments);
+            $parent = $xpath ? $this->get($xpath)->item(0) : $this;
+            $value = $this->ownerDocument->importNode($value, true);
+            $parent->appendChild($value);
         } else {
+            // create element
             $segments = explode('/', $xpath);
             $name = array_pop($segments);
             $xpath = implode('/', $segments);
@@ -96,10 +115,22 @@ class Element extends DOMElement implements ArrayAccess
                     ? $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null)
                     : $this->ownerDocument->createElement($name, $value['value'] ?? null);
                 foreach ($value['attributes'] ?? [] as $key => $val) {
-                    $element->setAttribute($key, $val);
+                    $this->setElementattribute($element, $key, $val);
                 }
                 $parent->appendChild($element);
             }
+        }
+    }
+
+    protected function setElementattribute($node, $attributeName, $attributeValue)
+    {
+        $segments = explode(':', $attributeName);
+        $name = array_pop($segments);
+        $prefix = array_pop($segments);
+        if ($prefix) {
+            $node->setAttributeNS($this->lookupNamespaceUri($prefix), $attributeName, $attributeValue);
+        } else {
+            $node->setAttribute($attributeName, $attributeValue);
         }
     }
 

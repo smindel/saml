@@ -6,6 +6,8 @@ use Smindel\SAML\Element;
 
 class Response extends Element
 {
+    protected static $schema_file = 'saml-schema-protocol-2.0.xsd';
+
     public function getIssuer($context = null)
     {
         return $this[$context . 'saml:Issuer/text()'];
@@ -40,11 +42,6 @@ class Response extends Element
         $algorithm = strtoupper($algorithm);
 
         return openssl_verify($data, $value, $certificate, $algorithm) == 1;
-    }
-
-    public function validateSchema()
-    {
-        return (bool)$this->ownerDocument->schemaValidate(dirname(dirname(dirname(__FILE__))) . '/schema/saml-schema-protocol-2.0.xsd');
     }
 
     public function validateStatus()
