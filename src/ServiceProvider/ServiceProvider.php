@@ -76,9 +76,9 @@ class ServiceProvider implements ContainerInterface
     {
         $inst = new Metadata;
 
-        $inst['@validUntil'] = date('c', strtotime('+' . $this->or('sp;md.validFor', '2 days')));
-        $inst['@cacheDuration'] = $this->or('sp;@cacheDuration', sprintf('PT%dS', 60*60*24*7));
-        $inst['@entityID'] = $this->or('sp;@entityID', $_SERVER['HTTP_HOST']);
+        $inst['./@validUntil'] = date('c', strtotime('+' . $this->or('md.validFor', '2 days')));
+        $inst['./@cacheDuration'] = $this->or('sp;./@cacheDuration', sprintf('PT%dS', 60*60*24*7));
+        $inst['./@entityID'] = $this->or('sp;./@entityID', $_SERVER['HTTP_HOST']);
 
         $inst['md:SPSSODescriptor'] = [
             '@AuthnRequestsSigned' => $this->or('sp;md:SPSSODescriptor/@AuthnRequestsSigned', 'false'),
@@ -154,18 +154,36 @@ class ServiceProvider implements ContainerInterface
     {
         $inst = new AuthnRequest;
 
-        $inst['@ID'] = $this->or('AuthnRequest.ID', '_authn_' . uniqid());
-        $inst['@Version'] = '2.0';
-        $inst['@Destination'] = $this->get("idp;md:IDPSSODescriptor/md:SingleSignOnService[@Binding='" . self::BINDING_POST . "']/@Location");
-        $inst['@IssueInstant'] = date('c');
-        $inst['@ProtocolBinding'] = $this->or('acs.binding', self::BINDING_POST);
-        $inst['@AssertionConsumerServiceURL'] = $this->or('acs.url', (self::is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+        $inst['./@ID'] = $this->or('AuthnRequest.ID', '_authn_' . uniqid());
+        $inst['./@Version'] = '2.0';
+        $inst['./@Destination'] = $this->get("idp;md:IDPSSODescriptor/md:SingleSignOnService[@Binding='" . self::BINDING_POST . "']/@Location");
+        $inst['./@IssueInstant'] = date('c');
+        $inst['./@ProtocolBinding'] = $this->or('acs.binding', self::BINDING_POST);
+        $inst['./@AssertionConsumerServiceURL'] = $this->or('acs.url', (self::is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 
         $inst['saml:Issuer'] = [
             'ns' => 'urn:oasis:names:tc:SAML:2.0:assertion',
-            'value' => $this->or('sp;@entityID', $_SERVER['HTTP_HOST']),
+            'value' => $this->or('sp;./@entityID', $_SERVER['HTTP_HOST']),
         ];
 
+        return $inst;
+    }
+
+    public function LogoutRequestFactory()
+    {
+        $inst = new LogoutRequest;
+
+        $inst['./@ID'] = $this->or('LogoutRequest.ID', '_logout_' . uniqid());
+        $inst['./@Version'] = '2.0';
+        $inst['./@Destination'] = $this->get("idp;md:IDPSSODescriptor/md:SingleLogoutService[@Binding='" . self::BINDING_POST . "']/@Location");;
+        $inst['./@IssueInstant'] = date('c');
+
+        $inst['saml:Issuer'] = $this->or('sp;./@entityID', $_SERVER['HTTP_HOST']);
+
+        $inst['saml:NameID'] = [ '@Format' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient' ];
+        $inst['saml:NameID/@SPNameQualifier'] = $this->get('metadata.url');
+
+var_dump($inst['saml:Issuer'], $this->or('sp;./@entityID', $_SERVER['HTTP_HOST']));die;
         return $inst;
     }
 

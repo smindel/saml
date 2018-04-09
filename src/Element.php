@@ -10,7 +10,7 @@ class Element extends DOMElement implements ArrayAccess
     protected $defaultSpId;
     protected $currentUrl;
     protected static $regex = '/
-        @++
+        \/@++
         (?=(?:(?:[^"]*+"){2})*+[^"]*+$)
         (?=(?:(?:[^\']*+\'){2})*+[^\']*+$)
         (?=(?:[^\[\]]*+\[[^\[\]]*+\])*+[^\[\]]*+$)
@@ -82,7 +82,7 @@ class Element extends DOMElement implements ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        list($xpath, $attribute) = preg_split(static::$regex, $offset . '@');
+        list($xpath, $attribute) = preg_split(static::$regex, $offset . '/@');
         if ($attribute && !is_array($value)) {
             // set attribute
             $parents = $xpath ? $this->get($xpath) : [$this];

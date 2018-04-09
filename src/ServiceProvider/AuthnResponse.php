@@ -26,32 +26,42 @@ class AuthnResponse extends Response
         return $this['saml:Assertion/saml:AuthnStatement[@SessionIndex]/@SessionIndex'];
     }
 
-    public function validate($requestID = null, $issuer = null, $audience = null)
+    public function validate($requestID = null, $issuer = null, $audience = null, $cert = null)
     {
         $xpath = new \DOMXPath($this->ownerDocument);
 
         if (!$this->validateSchema()) return !($this->validationErrors[] = 'invalid schema');
 
+        if (!$this->validateCertificate($cert)) return !($this->validationErrors[] = 'returned certificate does not matched the deposited');
+
         if (!$this->validateSignature()) return !($this->validationErrors[] = 'invalid response signature');
 
-        if ($requestID && $this['@InResponseTo'] != $requestID) return !($this->validationErrors[] = 'invalid request id');
+        if ($requestID && $this['./@InResponseTo'] != $requestID) return !($this->validationErrors[] = 'invalid request id');
 
         if (!$this->validateStatus()) return !($this->validationErrors[] = 'invalid status');
 
         if (!$this->validateIssuer($issuer)) return !($this->validationErrors[] = 'invalid issuer');
 
-        if (!$this->validateAssertion()) return !($this->validationErrors[] = 'invalid assertion');
+        if (!$this->validateAssertion($cert)) return !($this->validationErrors[] = 'invalid assertion');
 
         if (!$this->validateConditions($audience)) return !($this->validationErrors[] = 'invalid conditions');
 
         return true;
     }
 
-    public function validateAssertion()
+    public function validateCertificate($cert, $context = null)
+    {
+        return !$cert
+            || $cert == $this[$context . 'ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate/text()'];
+    }
+
+    public function validateAssertion($cert = null)
     {
         if ($this->getIssuer() != $this->getIssuer('saml:Assertion/')) return !($this->validationErrors[] = 'invalid assertion issuer');
 
         if (!$this->validateSubject()) return !($this->validationErrors[] = 'invalid assertion subject');
+
+        if (!$this->validateCertificate($cert, 'saml:Assertion/')) return !($this->validationErrors[] = 'returned assertion certificate does not matched the deposited');
 
         if (!$this->validateSignature('saml:Assertion/')) return !($this->validationErrors[] = 'invalid assertion signature');
 
