@@ -39,7 +39,7 @@ class Request extends Element
         $objDSig->sign($objKey);
 
         // Add the associated public key to the signature
-        $objDSig->add509Cert(file_get_contents($certificate));
+        $objDSig->add509Cert($certificate);
 
         // Append the signature to the XML
         $objDSig->insertSignature($this, $this['saml:NameID']);

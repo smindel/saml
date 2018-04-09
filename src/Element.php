@@ -10,11 +10,17 @@ class Element extends DOMElement implements ArrayAccess
     protected $defaultSpId;
     protected $currentUrl;
     protected static $regex = '/
-        \/@++
+        \/?@++
         (?=(?:(?:[^"]*+"){2})*+[^"]*+$)
         (?=(?:(?:[^\']*+\'){2})*+[^\']*+$)
         (?=(?:[^\[\]]*+\[[^\[\]]*+\])*+[^\[\]]*+$)
     /x';
+    public static $namespace_uris = [
+        'samlp' => 'urn:oasis:names:tc:SAML:2.0:protocol',
+        'saml' => 'urn:oasis:names:tc:SAML:2.0:assertion',
+        'ds' => 'http://www.w3.org/2000/09/xmldsig#',
+        'md' => 'urn:oasis:names:tc:SAML:2.0:metadata',
+    ];
 
     public function __construct($name = null, $value = '', $namespaceURI = '')
     {
@@ -38,6 +44,11 @@ class Element extends DOMElement implements ArrayAccess
         $this->xpath->registerNamespace('samlp', 'urn:oasis:names:tc:SAML:2.0:protocol');
         $this->xpath->registerNamespace('saml', 'urn:oasis:names:tc:SAML:2.0:assertion');
         $this->xpath->registerNamespace('ds', 'http://www.w3.org/2000/09/xmldsig#');
+    }
+
+    public function lookupNamespaceUri($prefix)
+    {
+        return parent::lookupNamespaceUri($prefix) ?: self::$namespace_uris[$prefix];
     }
 
     public static function fromXML($xml)
@@ -82,7 +93,7 @@ class Element extends DOMElement implements ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        list($xpath, $attribute) = preg_split(static::$regex, $offset . '/@');
+        list($xpath, $attribute) = preg_split(static::$regex, $offset . '@');
         if ($attribute && !is_array($value)) {
             // set attribute
             $parents = $xpath ? $this->get($xpath) : [$this];
@@ -111,9 +122,10 @@ class Element extends DOMElement implements ArrayAccess
                 }
             }
             foreach ($parents as $parent) {
-                $element = isset($value['ns'])
-                    ? $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null)
-                    : $this->ownerDocument->createElement($name, $value['value'] ?? null);
+                // $element = isset($value['ns'])
+                //     ? $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null)
+                //     : $this->ownerDocument->createElement($name, $value['value'] ?? null);
+                $element = $this->ownerDocument->createElementNS($value['ns'], $name, $value['value'] ?? null);
                 foreach ($value['attributes'] ?? [] as $key => $val) {
                     $this->setElementattribute($element, $key, $val);
                 }
