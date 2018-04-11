@@ -39,6 +39,7 @@ class Request extends Element
         $objDSig->sign($objKey);
 
         // Add the associated public key to the signature
+        $certificate = "-----BEGIN CERTIFICATE-----\r\n" . chunk_split($certificate, 64) . "-----END CERTIFICATE-----";
         $objDSig->add509Cert($certificate);
 
         // Append the signature to the XML
@@ -52,23 +53,22 @@ class Request extends Element
         return base64_encode(preg_replace('/(\s{2,})/', ' ', $this->toXML()));
     }
 
-    public function redirectBinding($destination)
+    public function redirectBinding()
     {
-        return $destination . '?' . http_build_query(['SAMLRequest' => $this->deflate()]);
+        return $this['@Destination'] . '?' . http_build_query(['SAMLRequest' => $this->deflate()]);
     }
 
-    public function postBinding($destination)
+    public function postBinding()
     {
         $base64Request = $this->deflate();
-        $raw = <<<RAW
+        return <<<RAW
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head><meta http-equiv="content-type" content="text/html; charset=utf-8" /></head>
 <body onload="document.getElementById('saml-request-form').submit();">
-    <form id="saml-request-form" method="post" action="%s"><input name="SAMLRequest" value="$base64Request" type="hidden"/></form>
+    <form id="saml-request-form" method="post" action="{$this['@Destination']}"><input name="SAMLRequest" value="$base64Request" type="hidden"/></form>
 </body>
 </html>
 RAW;
-        return sprintf($raw, $destination);
     }
 }
