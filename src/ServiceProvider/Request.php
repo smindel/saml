@@ -10,7 +10,7 @@ class Request extends Element
 {
     protected static $schema_file = 'saml-schema-protocol-2.0.xsd';
 
-    public function sign($privateKey, $certificate)
+    public function sign($certificate, $privateKey, $passphrase = null)
     {
         // Create a new Security object
         $objDSig = new XMLSecurityDSig();
@@ -28,10 +28,10 @@ class Request extends Element
 
         // Create a new (private) Security key
         $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type'=>'private'));
-        /*
-        If key has a passphrase, set it using
-        $objKey->passphrase = '<passphrase>';
-        */
+
+        // If key has a passphrase, set it using
+        if ($passphrase) $objKey->passphrase = $passphrase;
+
         // Load the private key
         $objKey->loadKey($privateKey, TRUE);
 
