@@ -39,8 +39,9 @@ class Request extends Element
         $objDSig->sign($objKey);
 
         // Add the associated public key to the signature
-        $certificate = "-----BEGIN CERTIFICATE-----\r\n" . chunk_split($certificate, 64) . "-----END CERTIFICATE-----";
-        $objDSig->add509Cert($certificate);
+        $isPem = strpos($certificate, '-----BEGIN CERTIFICATE') !== false;
+        // $certificate = file_get_contents('../.saml/DigiCertCA.crt');
+        $objDSig->add509Cert($certificate, $isPem);
 
         // Append the signature to the XML
         $objDSig->insertSignature($this, $this['saml:NameID']);

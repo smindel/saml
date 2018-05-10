@@ -171,14 +171,14 @@ class ServiceProvider implements ContainerInterface
     {
         $inst = new LogoutRequest;
 
-        $inst['@ID'] = $this->or('LogoutRequest.ID', '_logout_' . uniqid());
-        $inst['@Version'] = '2.0';
         $inst['@Destination'] = $this->get("idp;md:IDPSSODescriptor/md:SingleLogoutService[@Binding='" . self::BINDING_POST . "']/@Location");;
+        $inst['@ID'] = $this->or('LogoutRequest.ID', '_logout_' . uniqid());
         $inst['@IssueInstant'] = date('c');
+        $inst['@Version'] = '2.0';
 
         $inst['saml:Issuer'] = $this->or('sp;@entityID', $_SERVER['HTTP_HOST']);
 
-        $inst['saml:NameID'] = [ '@Format' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient' ];
+        $inst['saml:NameID'] = [ '@Format' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress' ];
         if ($this->has('metadata.url')) $inst['saml:NameID/@SPNameQualifier'] = $this->get('metadata.url');
 
         return $inst;

@@ -34,7 +34,7 @@ class Response extends Element
 
         $certificate = $this[$context . 'ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate'];
         if (!$certificate) return !($this->validationErrors[] = 'missing x509 certificate');
-        $certificate = "-----BEGIN CERTIFICATE-----\n" . $certificate->nodeValue . "\n" . "-----END CERTIFICATE-----";
+        $certificate = "-----BEGIN CERTIFICATE-----\n" . $certificate->nodeValue . "\n-----END CERTIFICATE-----";
 
         $algorithm = $this[$context . 'ds:Signature/ds:SignedInfo/ds:SignatureMethod[@Algorithm]'];
         if (!$algorithm) return !($this->validationErrors[] = 'missing or invalid signature method');
