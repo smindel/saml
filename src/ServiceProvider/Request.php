@@ -18,16 +18,22 @@ class Request extends Element
         $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
         // Sign using SHA-256
         $objDSig->addReference(
-            $this->ownerDocument,
-            XMLSecurityDSig::SHA256,
+            $this,
+            XMLSecurityDSig::SHA1,
             [
                 'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
                 'http://www.w3.org/2001/10/xml-exc-c14n#'
             ]
+            ,[
+                'id_name' => 'ID',
+                // 'overwrite' => false,
+                // 'prefix' => 'ds',
+                // 'prefix_ns' => 'http://www.w3.org/2000/09/xmldsig#',
+            ]
         );
 
         // Create a new (private) Security key
-        $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, array('type'=>'private'));
+        $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA1, array('type'=>'private'));
 
         // If key has a passphrase, set it using
         if ($passphrase) $objKey->passphrase = $passphrase;
