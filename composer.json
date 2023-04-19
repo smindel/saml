@@ -5,7 +5,7 @@
     "require": {
         "ext-dom": "*",
         "ext-openssl": "*",
-        "psr/container": "1.0.0",
+        "psr/container": "^1.0",
         "robrichards/xmlseclibs": "^3.1"
     },
     "require-dev": {
